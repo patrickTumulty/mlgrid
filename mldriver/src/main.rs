@@ -1,17 +1,10 @@
-use mlrust::{ColumnVector, NeuralNetwork};
+use ndarray::Array2;
+use mlrust::{array_utils, ColumnVector, NeuralNetwork};
 
 fn main() {
 
-    let mut nn = NeuralNetwork::new(3, 2, vec![4, 5]);
-    nn.init_network();
+    let mut nn = NeuralNetwork::new(2, 2, vec![2]);
 
-    let mut inputs = ColumnVector::zeros(3);
-    inputs[0] = 0.8;
-    inputs[1] = 0.334;
-    inputs[2] = 0.78;
-
-    let result = nn.evaluate(inputs);
-
-    println!("{}", result);
+    println!("{}", nn);
 
 }

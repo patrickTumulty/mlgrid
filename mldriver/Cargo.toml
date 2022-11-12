@@ -12,3 +12,4 @@ members = [
 
 [dependencies]
 mlrust = { path = "./crates/mlrust" }
+ndarray = "0.15.6"
