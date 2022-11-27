@@ -47,7 +47,7 @@ fn test_backprop() {
     //     println!("{}", *layer);
     // }
 
-    let result: (Vec<Array2<f32>>, Vec<Array2<f32>>) = nn.back_propagate(input, expected);
+    let result: (Vec<Array2<f32>>, Vec<Array2<f32>>) = nn.back_propagate(&input, &expected);
     for i in (0..nn.layers().len()).rev() {
         println!("{}\n{}\n{}", i + 1, result.0[i], result.1[i]);
     }
