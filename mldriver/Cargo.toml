@@ -13,4 +13,4 @@ members = [
 [dependencies]
 mlrust = { path = "./crates/mlrust" }
 ndarray = "0.15.6"
-nalgebra = "0.31.4"
+rand = "0.8.5"
