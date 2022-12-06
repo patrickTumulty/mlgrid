@@ -1,8 +1,11 @@
 
 
 use ndarray::{array};
-use mlrust::{ColumnVector, NeuralNetwork};
+use mlrust::{ActivationFunction, ColumnVector, NeuralNetwork};
 use rand::{Rng};
+
+
+
 
 fn main() {
 
@@ -33,6 +36,7 @@ fn test() {
 
 fn train_binary_function() {
     let mut nn = NeuralNetwork::new(4, 16, vec![10, 10]);
+    nn.set_activation_function(ActivationFunction::RELU);
 
     let mut training_data: Vec<(ColumnVector, ColumnVector)> = Vec::with_capacity(5);
     for i in 0..5 {
