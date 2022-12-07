@@ -7,10 +7,10 @@ edition = "2021"
 
 [workspace]
 members = [
-    "crates/mlrust"
+    "crates/graymat"
 ]
 
 [dependencies]
-mlrust = { path = "./crates/mlrust" }
+graymat = { path = "crates/graymat" }
 ndarray = "0.15.6"
 rand = "0.8.5"

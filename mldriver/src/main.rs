@@ -1,38 +1,15 @@
 
 
 use ndarray::{array};
-use mlrust::{ActivationFunction, ColumnVector, NeuralNetwork};
+
 use rand::{Rng};
-
-
+use graymat::{ActivationFunction, ColumnVector, examples, NeuralNetwork};
 
 
 fn main() {
-
-    test();
+    examples::xor();
 }
 
-fn test() {
-    let mut nn = NeuralNetwork::new(2, 1, vec![2]);
-
-    let mut test_data = Vec::with_capacity(4);
-    test_data.push((ColumnVector::from(&array![[0.0, 1.0]]), ColumnVector::from(&array![[1.0]])));
-    test_data.push((ColumnVector::from(&array![[1.0, 0.0]]), ColumnVector::from(&array![[1.0]])));
-    test_data.push((ColumnVector::from(&array![[0.0, 0.0]]), ColumnVector::from(&array![[0.0]])));
-    test_data.push((ColumnVector::from(&array![[1.0, 1.0]]), ColumnVector::from(&array![[0.0]])));
-
-    let mut rng = rand::thread_rng();
-
-    for _i in 0..50000 {
-        let index = rng.gen_range(0..4);
-        nn.train(&vec![test_data[index].clone()], 0.3);
-    }
-
-    println!("{}", nn.feed_forward(ColumnVector::from(&array![[0.0, 1.0]])));
-    println!("{}", nn.feed_forward(ColumnVector::from(&array![[1.0, 0.0]])));
-    println!("{}", nn.feed_forward(ColumnVector::from(&array![[0.0, 0.0]])));
-    println!("{}", nn.feed_forward(ColumnVector::from(&array![[1.0, 1.0]])));
-}
 
 fn train_binary_function() {
     let mut nn = NeuralNetwork::new(4, 16, vec![10, 10]);
@@ -56,16 +33,16 @@ fn train_binary_function() {
     }
 
     let test1 = ColumnVector::zeros(4);
-    println!("0\n{}", nn.feed_forward(test1.clone()));
+    println!("0\n{}", nn.evaluate(test1.clone()));
     let mut test2 = ColumnVector::zeros(4);
     test2[1] = 1.0;
     test2[0] = 1.0;
-    println!("3\n{}", nn.feed_forward(test2.clone()));
+    println!("3\n{}", nn.evaluate(test2.clone()));
     let mut test3 = ColumnVector::zeros(4);
     test3[2] = 1.0;
     test3[1] = 1.0;
     test3[0] = 1.0;
-    println!("7\n{}", nn.feed_forward(test3.clone()));
+    println!("7\n{}", nn.evaluate(test3.clone()));
 }
 
 
