@@ -1,9 +1,9 @@
-
+use graymat::examples;
 
 fn main() {
-    graymat::examples::binary_to_int();
+    examples::binary_to_int();
 
-    graymat::examples::xor();
+    examples::xor();
 }
 
 
