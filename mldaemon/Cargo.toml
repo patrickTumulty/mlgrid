@@ -1,5 +1,5 @@
 [package]
-name = "mldriver"
+name = "mldaemon"
 version = "0.1.0"
 edition = "2021"
 
@@ -14,3 +14,4 @@ members = [
 graymat = { path = "crates/graymat" }
 ndarray = "0.15.6"
 rand = "0.8.5"
+actix-web = "4.2.1"
