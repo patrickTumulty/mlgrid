@@ -1,0 +1,51 @@
+:root {
+    --cols: 50;
+    --rows: 50;
+    --cell-size: 5px;
+    --cell-color-deactivated: white;
+    --cell-color-activated: darkgrey;
+    --cell-color: var(--cell-color-deactivated);
+    background-color: grey;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), fit-content(100%));
+    grid-auto-flow: row;
+    grid-gap: 0;
+    align-self: flex-start;
+    outline: black solid 5px;
+}
+
+.grid-container {
+    display: flex;
+    margin: 20px;
+    align-items: center;
+    justify-content: center;
+}
+
+.grid-cell {
+    justify-content: center;
+    align-content: center;
+    width: var(--cell-size);
+    height: var(--cell-size);
+}
+
+.grid-cell-grid-lines {
+    outline-style: solid;
+    outline-color: #223037;
+}
+
+.grid-cell-activated {
+    background-color: var(--cell-color-activated);
+    box-shadow: 0 0 4px #0ff;
+    z-index: 0;
+}
+
+.grid-cell-deactivated {
+    background-color: var(--cell-color-deactivated);
+}
+
+.grid-cell:hover {
+    background-color: black;
+}
