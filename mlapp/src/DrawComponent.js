@@ -1,6 +1,6 @@
 import {Component} from "react";
-import './Grid.css'
-import './GlobalStyles.css'
+import './css/Grid.css'
+import './css/GlobalStyles.css'
 import NumberUtils from "./NumberUtils";
 
 const GRID_SIZE = 27;
@@ -18,7 +18,7 @@ export default class DrawComponent extends Component {
         this.r.style.setProperty("--cell-size", CELL_SIZE + "px");
 
         this.strokeSize = 3;
-        this.blur = 1.1;
+        this.blur = 1.15;
         this.useRandom = true;
         this.rand = 0.1;
 
@@ -58,9 +58,11 @@ export default class DrawComponent extends Component {
                     <button className="gs-button"
                             onClick={() => this.setState({
                                 cells: this.initCells()
-                            })}>Clear</button>
+                            })}>Clear
+                    </button>
                     <button className={"gs-button " + (this.state.erase ? "gs-button-selected" : "")}
-                            onClick={this.handleEraseClick()}>Erase</button>
+                            onClick={this.handleEraseClick()}>Erase
+                    </button>
                 </div>
             </div>
         )
