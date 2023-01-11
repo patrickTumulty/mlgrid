@@ -15,3 +15,6 @@ graymat = { path = "crates/graymat" }
 ndarray = "0.15.6"
 rand = "0.8.5"
 actix-web = "4.2.1"
+chrono = "0.4.23"
+serde = { version = "1.0.149", features = ["derive"] }
+
