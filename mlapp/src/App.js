@@ -1,10 +1,10 @@
 import './css/App.css';
-import DrawComponent from "./DrawComponent";
+import GridCanvas from "./GridCanvas";
 
 function App() {
   return (
     <div className="App">
-      <DrawComponent/>
+      <GridCanvas/>
     </div>
   );
 }

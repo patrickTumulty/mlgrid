@@ -7,7 +7,7 @@ const GRID_SIZE = 27;
 const CELL_SIZE = 15;
 const BLANK_CELL = 185;
 
-export default class DrawComponent extends Component {
+export default class GridCanvas extends Component {
 
     constructor(props) {
         super(props);
