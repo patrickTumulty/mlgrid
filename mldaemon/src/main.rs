@@ -51,6 +51,17 @@ async fn new_model(info: web::Json<NewModelInfo>) -> impl Responder {
     let models_dir = get_models_directory_path();
     make_dir_if_not_present(&models_dir);
 
+    let nn = parse_new_model_info_to_neural_network(&info);
+
+    let model = MlDaemonModel::new(&info.model_name, nn);
+
+    model.save(models_dir);
+
+    return HttpResponse::Ok().finish();
+}
+
+fn parse_new_model_info_to_neural_network(info: &web::Json<NewModelInfo>) -> NeuralNetwork {
+
     let layer_neurons = &info.layer_neurons;
     let input_neurons = layer_neurons[0] as usize;
     let output_neurons = layer_neurons[layer_neurons.len() - 1] as usize;
@@ -65,16 +76,10 @@ async fn new_model(info: web::Json<NewModelInfo>) -> impl Responder {
         af = af_option.unwrap();
     }
 
-    let nn = NeuralNetwork::new(input_neurons,
-                                output_neurons,
-                                hidden_neurons,
-                                af);
-
-    let model = MlDaemonModel::new(&info.model_name, nn);
-
-    model.save(models_dir);
-
-    return HttpResponse::Ok().finish();
+    return NeuralNetwork::new(input_neurons,
+                              output_neurons,
+                              hidden_neurons,
+                              af);
 }
 
 #[post("/add-test-data/{model_id}")]
