@@ -24,14 +24,16 @@ export default class RESTClient
     }
 
     get(url) {
-        return $.ajax({
+        let result = {};
+        $.ajax({
             type: "GET",
             url: `${this.remote}${url}`,
             cache: false,
             async: false,
             success: function (data) {
-                // TODO consider adding something here
+                result = data;
             }
         });
+        return result;
     }
 }

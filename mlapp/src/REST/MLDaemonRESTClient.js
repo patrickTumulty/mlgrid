@@ -11,6 +11,10 @@ export default class MLDaemonRESTClient
         return this.client.get("/get-possible-outputs");
     }
 
+    getModels() {
+        return this.client.get("/get-models");
+    }
+
     evaluate(grid) {
 
     }

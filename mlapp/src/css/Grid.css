@@ -5,7 +5,7 @@
     --cell-color-deactivated: white;
     --cell-color-activated: darkgrey;
     --cell-color: var(--cell-color-deactivated);
-    background-color: grey;
+    /*background-color: grey;*/
 }
 
 .grid {

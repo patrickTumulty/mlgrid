@@ -4,6 +4,7 @@ mod mldaemon_utils;
 mod test_data;
 
 use std::fs::{ReadDir};
+use actix_cors::Cors;
 
 use actix_web::{web, post, get, App, HttpServer, Responder, HttpResponse};
 use chrono::Utc;
@@ -111,8 +112,15 @@ async fn add_test_data(model_id_path: web::Path<String>,
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+
     HttpServer::new(|| {
-        App::new().service(get_models)
+
+        // let api_service = web::scope("/api");
+
+        let cors = Cors::default().allow_any_origin();
+
+        App::new().wrap(cors)
+                  .service(get_models)
                   .service(new_model)
                   .service(ping)
                   .service(add_test_data)
