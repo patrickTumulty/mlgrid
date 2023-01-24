@@ -7,15 +7,16 @@ export default class MLDaemonRESTClient
         this.client = new RESTClient("http://127.0.0.1:8080")
     }
 
-    getOutputs() {
-        return this.client.get("/get-possible-outputs");
-    }
-
     getModels() {
-        return this.client.get("/get-models");
+        return JSON.parse(this.client.get("/get-models").responseText);
     }
 
-    evaluate(grid) {
-
+    newModel(modelName, networkLayers, activationFunction) {
+        let json = {
+            model_name: modelName,
+            layer_neurons: networkLayers,
+            activation_function_id: activationFunction
+        };
+        return this.client.post("/new-model", json);
     }
 }

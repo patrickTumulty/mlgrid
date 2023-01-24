@@ -2,23 +2,29 @@ import {Component} from "react";
 import Button from 'react-bootstrap/Button';
 import {Stack, Form} from "react-bootstrap";
 import NumberUtils from "./NumberUtils";
+import {useNavigate} from "react-router-dom"
 
-export default class ModelSelector extends Component {
-
+class ModelSelector extends Component {
     constructor(props) {
         super(props);
 
         this.client = props.client;
-        this.models = ["M1", "M2", "M3"];
+        this.loadModels();
+    }
+
+    loadModels() {
         this.modelsMap = {};
+        this.models = this.client.getModels();
+        if (Object.keys(this.models).length === 0) {
+            return;
+        }
         this.models.forEach(model => {
             this.modelsMap[NumberUtils.hashCode(model)] = model;
         })
-        // this.models = this.client.getModels();
-        console.log(this.models);
     }
 
     render() {
+        this.loadModels();
         return (
             <div style={{padding: "100px 0px 100px 0px"}}>
                 {this.modelSelectControls()}
@@ -26,15 +32,13 @@ export default class ModelSelector extends Component {
         );
     }
 
-    configureModelOptions() {
-
-    }
-
     modelSelectControls() {
         return (
             <Stack className="col-md-5 mx-auto">
                 <Stack className="mx-auto" direction="horizontal" gap={2}>
-                    <Button as="a" variant="secondary">New</Button>
+                    <Button onClick={() => {
+                        this.props.navigate("/new-model-form");
+                    }} as="a" variant="secondary">New</Button>
                     <Form.Select aria-label="Default select example" size="md" style={{width: 250}}>
                         {this.getOptions()}
                     </Form.Select>
@@ -48,8 +52,13 @@ export default class ModelSelector extends Component {
     getOptions() {
         let options = [];
         for (let id in this.modelsMap) {
-            options.push(<option value={id}>{this.modelsMap[id]}</option>)
+            options.push(<option key={id} value={id}>{this.modelsMap[id]}</option>)
         }
         return options;
     }
+}
+
+export function ModelSelectorWithRouter(props) {
+    const navigate = useNavigate();
+    return (<ModelSelector navigate={navigate} client={props.client}></ModelSelector>)
 }

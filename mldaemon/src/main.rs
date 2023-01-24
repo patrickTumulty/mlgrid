@@ -6,7 +6,7 @@ mod test_data;
 use std::fs::{ReadDir};
 use actix_cors::Cors;
 
-use actix_web::{web, post, get, App, HttpServer, Responder, HttpResponse};
+use actix_web::{web, post, get, App, HttpServer, Responder, HttpResponse, http};
 use chrono::Utc;
 use graymat::activation_function::ActivationFunction;
 use graymat::neural_network::NeuralNetwork;
@@ -117,7 +117,10 @@ async fn main() -> std::io::Result<()> {
 
         // let api_service = web::scope("/api");
 
-        let cors = Cors::default().allow_any_origin();
+        let cors = Cors::default().allow_any_origin()
+                                  .allowed_methods(vec!["GET", "POST"])
+                                  .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
+                                  .allowed_header(http::header::CONTENT_TYPE);
 
         App::new().wrap(cors)
                   .service(get_models)
