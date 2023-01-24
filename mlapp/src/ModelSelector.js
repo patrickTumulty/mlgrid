@@ -1,4 +1,4 @@
-import {Component} from "react";
+import React, {Component} from "react";
 import Button from 'react-bootstrap/Button';
 import {Stack, Form} from "react-bootstrap";
 import NumberUtils from "./NumberUtils";
@@ -7,6 +7,8 @@ import {useNavigate} from "react-router-dom"
 class ModelSelector extends Component {
     constructor(props) {
         super(props);
+
+        this.selectedModelRef = React.createRef();
 
         this.client = props.client;
         this.loadModels();
@@ -36,14 +38,16 @@ class ModelSelector extends Component {
         return (
             <Stack className="col-md-5 mx-auto">
                 <Stack className="mx-auto" direction="horizontal" gap={2}>
-                    <Button onClick={() => {
-                        this.props.navigate("/new-model-form");
-                    }} as="a" variant="secondary">New</Button>
-                    <Form.Select aria-label="Default select example" size="md" style={{width: 250}}>
+                    <Button onClick={() => {this.props.navigate("/new-model-form");}} as="a" variant="secondary">New</Button>
+                    <Form.Select ref={this.selectedModelRef} aria-label="Default select example" size="md" style={{width: 250}}>
                         {this.getOptions()}
                     </Form.Select>
                     <Button as="a" variant="primary">Select</Button>
-                    <Button as="a" variant="secondary">Delete</Button>
+                    <Button as="a" onClick={() => {
+                        let selectedModel = this.modelsMap[this.selectedModelRef.current.value];
+                        this.client.deleteModel(selectedModel);
+                        this.loadModels();
+                    }} variant="secondary">Delete</Button>
                 </Stack>
             </Stack>
         );

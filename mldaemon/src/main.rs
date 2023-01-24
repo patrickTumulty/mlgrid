@@ -3,7 +3,9 @@ mod mldaemon_model;
 mod mldaemon_utils;
 mod test_data;
 
+use std::fs;
 use std::fs::{ReadDir};
+use std::path::PathBuf;
 use actix_cors::Cors;
 
 use actix_web::{web, post, get, App, HttpServer, Responder, HttpResponse, http};
@@ -83,21 +85,23 @@ fn parse_new_model_info_to_neural_network(info: &web::Json<NewModelInfo>) -> Neu
                               af);
 }
 
-#[post("/add-test-data/{model_id}")]
-async fn add_test_data(model_id_path: web::Path<String>,
+#[post("/add-test-data/{model_name}")]
+async fn add_test_data(model_name_path: web::Path<String>,
                        test_data_json: web::Json<TestData>) -> impl Responder
 {
-    let models_dir = get_models_directory_path();
-    let model_id_string: String = model_id_path.into_inner();
-    let target_model_dir = models_dir.join(&model_id_string);
-    if !target_model_dir.exists() {
+    let model_name_path = model_name_path.into_inner();
+    let target_model_dir = get_target_model_dir(&model_name_path);
+    if target_model_dir.is_none() {
         return HttpResponse::NoContent().body(format!("Mode {} not found",
-                                                      model_id_string));
+                                                      model_name_path));
     }
 
     let test_data = test_data_json.into_inner();
+    let test_data_dir = target_model_dir.unwrap().join("test_data");
 
-    let test_data_file_path = target_model_dir.join(test_data.label.to_owned());
+    make_dir_if_not_present(&test_data_dir);
+
+    let test_data_file_path = test_data_dir.join(test_data.label.to_owned());
     if test_data_file_path.exists() {
         return HttpResponse::BadRequest().body(format!("Test data with label {} already present",
                                                        test_data.label.to_owned()));
@@ -106,6 +110,33 @@ async fn add_test_data(model_id_path: web::Path<String>,
     test_data.to_file(test_data_file_path.to_str()
                                          .unwrap()
                                          .to_string());
+
+    return HttpResponse::Ok().finish();
+}
+
+fn get_target_model_dir(model_name_path: &str) -> Option<PathBuf> {
+    let models_dir = get_models_directory_path();
+    let target_model_dir = models_dir.join(model_name_path);
+    if !target_model_dir.exists() {
+        return None;
+    }
+    Some(target_model_dir)
+}
+
+#[post("/delete-model/{model_name}")]
+async fn delete_model(model_name_path: web::Path<String>) -> impl Responder {
+
+    let model_name_path = model_name_path.into_inner();
+    let target_model_dir = get_target_model_dir(&model_name_path);
+    if target_model_dir.is_none() {
+        return HttpResponse::NoContent().body(format!("Mode {} not found",
+                                                      model_name_path));
+    }
+
+    let result = fs::remove_dir_all(target_model_dir.unwrap());
+    if result.is_err() {
+        return HttpResponse::NoContent().body("Error clearing model");
+    }
 
     return HttpResponse::Ok().finish();
 }
@@ -127,6 +158,7 @@ async fn main() -> std::io::Result<()> {
                   .service(new_model)
                   .service(ping)
                   .service(add_test_data)
+                  .service(delete_model)
     }).bind(("127.0.0.1", 8080))?
       .run()
       .await

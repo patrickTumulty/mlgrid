@@ -8,6 +8,10 @@ export default class MLDaemonRESTClient
     }
 
     getModels() {
+        let result = this.client.get("/get-models");
+        if (result.statusText !== "OK") {
+            return {};
+        }
         return JSON.parse(this.client.get("/get-models").responseText);
     }
 
@@ -18,5 +22,9 @@ export default class MLDaemonRESTClient
             activation_function_id: activationFunction
         };
         return this.client.post("/new-model", json);
+    }
+
+    deleteModel(modelName) {
+        return this.client.post("/delete-model/" + `${modelName}`, {});
     }
 }
