@@ -2,10 +2,12 @@ import {Component} from "react";
 import './css/Grid.css'
 import './css/GlobalStyles.css'
 import NumberUtils from "./NumberUtils";
+import Button from "react-bootstrap/Button";
+import {Stack} from "react-bootstrap";
 
 const GRID_SIZE = 27;
 const CELL_SIZE = 15;
-const BLANK_CELL = 185;
+const BLANK_CELL = 255;
 
 export default class GridCanvas extends Component {
 
@@ -32,6 +34,10 @@ export default class GridCanvas extends Component {
         this.setState({
             cells: this.state.cells
         });
+
+        this.buttonStyle = {
+            width: "100px"
+        }
     }
 
     initCells() {
@@ -48,23 +54,28 @@ export default class GridCanvas extends Component {
 
     render() {
         return (
-            <div>
+            <Stack>
                 <div className="grid-container">
                     <div className='grid'>
                         {this.renderGridCells()}
                     </div>
                 </div>
-                <div>
-                    <button className="gs-button"
-                            onClick={() => this.setState({
-                                cells: this.initCells()
-                            })}>Clear
-                    </button>
-                    <button className={"gs-button " + (this.state.erase ? "gs-button-selected" : "")}
-                            onClick={this.handleEraseClick()}>Erase
-                    </button>
-                </div>
-            </div>
+                <Stack className="mx-auto" direction="horizontal" gap={2}>
+                    <Button
+                        style={this.buttonStyle}
+                        onClick={() => this.setState({
+                            cells: this.initCells()
+                        })}>
+                        Clear
+                    </Button>
+                    <Button
+                        style={this.buttonStyle}
+                        onClick={this.handleEraseClick()}
+                        variant={(this.state.erase ? "warning" : "primary")}>
+                        Erase
+                    </Button>
+                </Stack>
+            </Stack>
         )
     }
 

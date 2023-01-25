@@ -14,7 +14,7 @@
     grid-auto-flow: row;
     grid-gap: 0;
     align-self: flex-start;
-    outline: black solid 5px;
+    outline: #0D6EFD solid 5px;
 }
 
 .grid-container {
