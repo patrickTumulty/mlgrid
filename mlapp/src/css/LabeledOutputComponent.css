@@ -1,0 +1,10 @@
+
+.result-node {
+    padding: 4px;
+}
+
+.result-node:hover {
+    opacity: 70%;
+    background-color: #0D6EFD;
+    border-radius: 10px;
+}

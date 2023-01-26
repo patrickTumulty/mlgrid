@@ -45,7 +45,7 @@ async fn get_models() -> impl Responder {
 struct NewModelInfo {
     model_name: String,
     layer_neurons: Vec<u8>,
-    activation_function_id: u8
+    activation_function_id: u8,
 }
 
 #[post("/new-model")]

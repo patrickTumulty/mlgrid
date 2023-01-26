@@ -1,6 +1,5 @@
 import {Component} from "react";
 import './css/Grid.css'
-import './css/GlobalStyles.css'
 import NumberUtils from "./NumberUtils";
 import Button from "react-bootstrap/Button";
 import {Stack} from "react-bootstrap";
@@ -13,6 +12,8 @@ export default class GridCanvas extends Component {
 
     constructor(props) {
         super(props);
+
+        this.onGridChangedCallback = props.onGridChangedCallback;
 
         this.r = document.querySelector(":root");
         this.r.style.setProperty("--cols", GRID_SIZE);
@@ -63,9 +64,11 @@ export default class GridCanvas extends Component {
                 <Stack className="mx-auto" direction="horizontal" gap={2}>
                     <Button
                         style={this.buttonStyle}
-                        onClick={() => this.setState({
-                            cells: this.initCells()
-                        })}>
+                        onClick={() => {
+                            this.setState({
+                                cells: this.initCells()
+                            });
+                        }}>
                         Clear
                     </Button>
                     <Button
@@ -138,6 +141,13 @@ export default class GridCanvas extends Component {
             this.eraseCell(row, col);
         } else {
             this.drawCell(row, col);
+        }
+        this.notifyOnGridChange();
+    }
+
+    notifyOnGridChange() {
+        if (this.onGridChangedCallback !== null) {
+            this.onGridChangedCallback(this.state.cells);
         }
     }
 

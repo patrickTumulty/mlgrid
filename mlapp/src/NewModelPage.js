@@ -27,40 +27,42 @@ class NewModelPage extends Component {
 
     render() {
         return (
-            <Form style={{textAlign: "left", padding: 20}}>
-                <Form.Label style={{fontSize: "24pt"}}>New Neural Network Model</Form.Label>
-                <Form.Group className="mb-3" controlId="newModelForm.modelName">
-                    <Form.Label>Model Name</Form.Label>
-                    <Form.Control ref={this.newModelNameRef} type="text" placeholder="New Model" />
-                </Form.Group>
-                <Form.Group className="mb-3" controlId="newModelForm.activationFunction">
-                    <Form.Label>Activation Function</Form.Label>
-                    <Form.Select ref={this.activationFunctionRef} aria-label="Default select example" size="md" style={{width: 250}}>
-                        <option value={1}>Sigmoid</option>
-                        <option value={2}>ReLU</option>
-                        <option value={3}>Tanh</option>
-                    </Form.Select>
-                </Form.Group>
-                <Form.Group className="mb-3" controlId="newModelForm.layers">
-                    <Form.Label controlId="newModelForm.layers">Neural Network Layers</Form.Label>
-                    <Form.Control ref={this.networkLayersRef} type="text" placeholder="Example: 2, 4, 3, 2"/>
-                    <Form.Text controlId="newModelForm.layersDescriptor" muted>
-                        The 'Neural Network Layers' field is a comma separated list of integers.
-                        Ths first and last number represents the number of input and output
-                        neurons for the network respectively. All other numbers represent the
-                        number of neurons in each input layer.
-                    </Form.Text>
-                </Form.Group>
-                <Stack style={{width: 200}} gap={2}>
-                    <Button onClick={() => this.createNewModelButtonClicked()}>Create New Model</Button>
-                    <Button variant="secondary" onClick={() => this.navigateBackToStart()}>Cancel</Button>
-                </Stack>
-                <Form.Group className="mb-3">
-                    <Form.Text controlId="newModelForm.errorText" style={{color: "red"}}>
-                        {this.state.errorText}
-                    </Form.Text>
-                </Form.Group>
-            </Form>
+            <div style={{display: "flex", justifyContent: "center"}}>
+                <Form style={{textAlign: "left", width: 750, padding: 20}}>
+                    <Form.Label style={{fontSize: "24pt"}}>New Neural Network Model</Form.Label>
+                    <Form.Group className="mb-3" controlId="newModelForm.modelName">
+                        <Form.Label>Model Name</Form.Label>
+                        <Form.Control ref={this.newModelNameRef} type="text" placeholder="New Model" />
+                    </Form.Group>
+                    <Form.Group className="mb-3" controlId="newModelForm.activationFunction">
+                        <Form.Label>Activation Function</Form.Label>
+                        <Form.Select ref={this.activationFunctionRef} aria-label="Default select example" size="md" style={{width: 250}}>
+                            <option value={1}>Sigmoid</option>
+                            <option value={2}>ReLU</option>
+                            <option value={3}>Tanh</option>
+                        </Form.Select>
+                    </Form.Group>
+                    <Form.Group className="mb-3" controlId="newModelForm.layers">
+                        <Form.Label controlId="newModelForm.layers">Neural Network Layers</Form.Label>
+                        <Form.Control ref={this.networkLayersRef} type="text" placeholder="Example: 2, 4, 3, 2"/>
+                        <Form.Text controlId="newModelForm.layersDescriptor" muted>
+                            The 'Neural Network Layers' field is a comma separated list of integers.
+                            Ths first and last number represents the number of input and output
+                            neurons for the network respectively. All other numbers represent the
+                            number of neurons in each input layer.
+                        </Form.Text>
+                    </Form.Group>
+                    <Stack style={{width: 200}} gap={2}>
+                        <Button onClick={() => this.createNewModelButtonClicked()}>Create New Model</Button>
+                        <Button variant="secondary" onClick={() => this.navigateBackToStart()}>Cancel</Button>
+                    </Stack>
+                    <Form.Group className="mb-3">
+                        <Form.Text controlId="newModelForm.errorText" style={{color: "red"}}>
+                            {this.state.errorText}
+                        </Form.Text>
+                    </Form.Group>
+                </Form>
+            </div>
         );
     }
 
