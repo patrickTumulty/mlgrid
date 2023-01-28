@@ -15,11 +15,12 @@ export default class MLDaemonRESTClient
         return JSON.parse(this.client.get("/get-models").responseText);
     }
 
-    newModel(modelName, networkLayers, activationFunction) {
+    newModel(modelName, networkLayers, activationFunction, outputLabels) {
         let json = {
             model_name: modelName,
             layer_neurons: networkLayers,
-            activation_function_id: activationFunction
+            activation_function_id: activationFunction,
+            layer_output_labels: outputLabels
         };
         return this.client.post("/new-model", json);
     }

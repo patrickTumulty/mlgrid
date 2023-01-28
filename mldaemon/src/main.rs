@@ -61,7 +61,7 @@ async fn get_model_info(model_name: web::Path<String>) -> impl Responder {
 #[derive(Deserialize)]
 struct NewModelInfo {
     model_name: String,
-    layer_neurons: Vec<u8>,
+    layer_neurons: Vec<u32>,
     activation_function_id: u8,
     layer_output_labels: Vec<String>
 }
