@@ -1,12 +1,19 @@
-import {Component} from "react";
+import React, {Component} from "react";
 import {Stack} from "react-bootstrap";
 import GridCanvas from "./GridCanvas";
 import LabeledOutputComponent from "./LabeledOutputComponent";
+import {useLocation, useNavigate} from "react-router-dom";
 
 
-export default class GridPage extends Component {
+class GridPage extends Component {
     constructor(props) {
         super(props);
+
+        this.selectedModel = "";
+
+        if (this.props.location.state !== null) {
+            this.selectedModel = this.props.location.state.model_name;
+        }
     }
 
     render() {
@@ -20,4 +27,10 @@ export default class GridPage extends Component {
         );
     }
 
+}
+
+export function GridPageFC(props) {
+    const navigate = useNavigate();
+    const location = useLocation();
+    return (<GridPage navigate={navigate} location={location} client={props.client}></GridPage>)
 }

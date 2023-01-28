@@ -170,7 +170,7 @@ class NewModelPage extends Component {
     }
 }
 
-export function NewModelPageWithRouter(props) {
+export function NewModelPageFC(props) {
     const navigate = useNavigate();
     return (<NewModelPage navigate={navigate} client={props.client}></NewModelPage>)
 }

@@ -38,16 +38,44 @@ class ModelSelector extends Component {
         return (
             <Stack className="col-md-5 mx-auto">
                 <Stack className="mx-auto" direction="horizontal" gap={2}>
-                    <Button onClick={() => {this.props.navigate("/new-model-form");}} as="a" variant="secondary">New</Button>
-                    <Form.Select ref={this.selectedModelRef} aria-label="Default select example" size="md" style={{width: 250}}>
+                    <Button
+                        onClick={() => {this.props.navigate("/new-model-form");}}
+                        as="a" variant="secondary"
+                    >
+                        New
+                    </Button>
+                    <Form.Select
+                        ref={this.selectedModelRef}
+                        size="md"
+                        style={{width: 250}}
+                    >
                         {this.getOptions()}
                     </Form.Select>
-                    <Button as="a" variant="primary">Select</Button>
-                    <Button as="a" onClick={() => {
-                        let selectedModel = this.modelsMap[this.selectedModelRef.current.value];
-                        this.client.deleteModel(selectedModel);
-                        this.loadModels();
-                    }} variant="secondary">Delete</Button>
+                    <Button
+                        as="a"
+                        variant="primary"
+                        onClick={() => {
+                            let selectedModel = this.modelsMap[this.selectedModelRef.current.value];
+                            this.props.navigate("/canvas", {
+                                    state : {
+                                        model_name: selectedModel
+                                    }
+                                });
+                        }}
+                    >
+                        Select
+                    </Button>
+                    <Button
+                        as="a"
+                        onClick={() => {
+                            let selectedModel = this.modelsMap[this.selectedModelRef.current.value];
+                            this.client.deleteModel(selectedModel);
+                            this.loadModels();
+                        }}
+                        variant="secondary"
+                    >
+                        Delete
+                    </Button>
                 </Stack>
             </Stack>
         );
@@ -62,7 +90,7 @@ class ModelSelector extends Component {
     }
 }
 
-export function ModelSelectorWithRouter(props) {
+export function ModelSelectorFC(props) {
     const navigate = useNavigate();
     return (<ModelSelector navigate={navigate} client={props.client}></ModelSelector>)
 }

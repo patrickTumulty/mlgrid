@@ -1,8 +1,9 @@
-import {Component} from "react";
+import React, {Component} from "react";
 import './css/Grid.css'
 import NumberUtils from "./NumberUtils";
 import Button from "react-bootstrap/Button";
 import {Stack} from "react-bootstrap";
+import {useLocation, useNavigate} from "react-router-dom";
 
 const GRID_SIZE = 27;
 const CELL_SIZE = 15;
@@ -31,10 +32,6 @@ export default class GridCanvas extends Component {
             cells: this.initCells(),
             erase: false
         };
-
-        this.setState({
-            cells: this.state.cells
-        });
 
         this.buttonStyle = {
             width: "100px"
@@ -146,7 +143,7 @@ export default class GridCanvas extends Component {
     }
 
     notifyOnGridChange() {
-        if (this.onGridChangedCallback !== null) {
+        if (this.onGridChangedCallback !== undefined) {
             this.onGridChangedCallback(this.state.cells);
         }
     }

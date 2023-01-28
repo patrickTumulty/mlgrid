@@ -12,20 +12,21 @@ export default class LabeledOutputComponent extends Component {
         let index = 0;
         this.props.data.forEach(value => {
             let color = this.floatToColor(value);
-            console.log(color);
             output.push(
-                <Stack className="mx-auto result-node" direction="horizontal" gap={2}>
-                    <div style={{
-                        textAlign: "center",
-                        verticalAlign: "middle",
-                        lineHeight: "40px",
-                        fontSize: 14,
-                        width: 40,
-                        height: 40,
-                        borderRadius: "50%",
-                        backgroundColor: color,
-                        color: (value < 0.5 ? "#000000" : "#FFFFFF")
-                    }}>
+                <Stack key={index} className="mx-auto result-node" direction="horizontal" gap={2}>
+                    <div
+                        style={{
+                            textAlign: "center",
+                            verticalAlign: "middle",
+                            lineHeight: "40px",
+                            fontSize: 14,
+                            width: 40,
+                            height: 40,
+                            borderRadius: "50%",
+                            backgroundColor: color,
+                            color: (value < 0.5 ? "#000000" : "#FFFFFF")
+                        }}
+                    >
                         {value.toFixed(2)}
                     </div>
                     <div style={{width: 50, textAlign: "left"}}>{index}</div>

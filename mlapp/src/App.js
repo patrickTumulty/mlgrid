@@ -1,11 +1,10 @@
 import './css/App.css';
-import GridCanvas from "./GridCanvas";
-import {ModelSelectorWithRouter} from "./ModelSelector"
+import {ModelSelectorFC} from "./ModelSelector"
 import { BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 import React, {Component} from "react";
 import MLDaemonRESTClient from "./REST/MLDaemonRESTClient";
-import {NewModelPageWithRouter} from "./NewModelPage";
-import GridPage from "./GridPage";
+import {NewModelPageFC} from "./NewModelPage";
+import {GridPageFC} from "./GridPage";
 
 export default class App extends Component {
     constructor(props) {
@@ -19,9 +18,9 @@ export default class App extends Component {
             <div className="App">
                 <Router>
                     <Routes>
-                        <Route path='/' element={<ModelSelectorWithRouter client={this.client}/>}/>
-                        <Route path='/new-model-form' element={<NewModelPageWithRouter client={this.client}/>}/>
-                        <Route path='/canvas' element={<GridPage/>}/>
+                        <Route path='/' element={<ModelSelectorFC client={this.client}/>}/>
+                        <Route path='/new-model-form' element={<NewModelPageFC client={this.client}/>}/>
+                        <Route path='/canvas' element={<GridPageFC/>}/>
                     </Routes>
                 </Router>
             </div>
