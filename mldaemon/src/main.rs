@@ -12,7 +12,7 @@ use actix_web::{web, post, get, App, HttpServer, Responder, HttpResponse, http};
 use chrono::Utc;
 use graymat::activation_function::ActivationFunction;
 use graymat::neural_network::NeuralNetwork;
-use crate::mldaemon_model::MlDaemonModel;
+use crate::mldaemon_model::{MlDaemonModel, MODEL_INFO_BIN, ModelInfo};
 use crate::mldaemon_utils::{get_models_directory_path, make_dir_if_not_present};
 use serde::{Deserialize};
 use crate::test_data::TestData;
@@ -41,11 +41,29 @@ async fn get_models() -> impl Responder {
     return web::Json(models_vec);
 }
 
+#[get("/get-model-info/{model_name}")]
+async fn get_model_info(model_name: web::Path<String>) -> impl Responder {
+    let models_dir = get_models_directory_path();
+    if !&models_dir.exists() {
+        return HttpResponse::BadRequest().body("No models found");
+    }
+    let model_name_string = model_name.into_inner();
+    let model_dir = models_dir.join(model_name_string.to_owned());
+    if !&model_dir.exists() {
+        return HttpResponse::BadRequest().body(format!("Model {} not found", model_name_string));
+    }
+
+    let model_info: ModelInfo = ModelInfo::from_file(&model_dir.join(MODEL_INFO_BIN));
+
+    return HttpResponse::Ok().json(web::Json(model_info));
+}
+
 #[derive(Deserialize)]
 struct NewModelInfo {
     model_name: String,
     layer_neurons: Vec<u8>,
     activation_function_id: u8,
+    layer_output_labels: Vec<String>
 }
 
 #[post("/new-model")]
@@ -54,16 +72,20 @@ async fn new_model(info: web::Json<NewModelInfo>) -> impl Responder {
     let models_dir = get_models_directory_path();
     make_dir_if_not_present(&models_dir);
 
-    let nn = parse_new_model_info_to_neural_network(&info);
+    let new_model_info = info.into_inner();
 
-    let model = MlDaemonModel::new(&info.model_name, nn);
+    let nn = parse_new_model_info_to_neural_network(&new_model_info);
+
+    let model = MlDaemonModel::new(&new_model_info.model_name,
+                                   nn,
+                                   new_model_info.layer_output_labels);
 
     model.save(models_dir);
 
     return HttpResponse::Ok().finish();
 }
 
-fn parse_new_model_info_to_neural_network(info: &web::Json<NewModelInfo>) -> NeuralNetwork {
+fn parse_new_model_info_to_neural_network(info: &NewModelInfo) -> NeuralNetwork {
 
     let layer_neurons = &info.layer_neurons;
     let input_neurons = layer_neurons[0] as usize;
@@ -86,10 +108,10 @@ fn parse_new_model_info_to_neural_network(info: &web::Json<NewModelInfo>) -> Neu
 }
 
 #[post("/add-test-data/{model_name}")]
-async fn add_test_data(model_name_path: web::Path<String>,
+async fn add_test_data(model_name: web::Path<String>,
                        test_data_json: web::Json<TestData>) -> impl Responder
 {
-    let model_name_path = model_name_path.into_inner();
+    let model_name_path = model_name.into_inner();
     let target_model_dir = get_target_model_dir(&model_name_path);
     if target_model_dir.is_none() {
         return HttpResponse::NoContent().body(format!("Mode {} not found",
@@ -155,6 +177,7 @@ async fn main() -> std::io::Result<()> {
 
         App::new().wrap(cors)
                   .service(get_models)
+                  .service(get_model_info)
                   .service(new_model)
                   .service(ping)
                   .service(add_test_data)
