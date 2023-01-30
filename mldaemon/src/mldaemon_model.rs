@@ -4,7 +4,8 @@ use std::path::{PathBuf};
 use serde::{Deserialize, Serialize};
 use graymat::column_vector::ColumnVector;
 use graymat::neural_network::NeuralNetwork;
-use crate::mldaemon_utils::make_dir_if_not_present;
+use crate::instance_manager::InstanceIdInitializer;
+use crate::mldaemon_utils::{get_models_directory_path, make_dir_if_not_present};
 
 pub struct MlDaemonModel {
     model_info: ModelInfo,
@@ -25,7 +26,7 @@ impl ModelInfo {
         let mut model_info_file = File::create(path).unwrap();
         model_info_file.write(&model_info_bytes).unwrap();
     }
-    
+
     pub fn from_file(path: &PathBuf) -> ModelInfo {
         let mut model_info_bytes: Vec<u8> = Vec::new();
         let mut file = File::open(path).unwrap();
@@ -58,9 +59,24 @@ impl MlDaemonModel {
         self.neural_network.to_file(model_dir.to_str().unwrap(), "nn");
     }
 
-    // pub fn from(dir: PathBuf) -> Self {
-    //     let model_dir_str = dir.to_str().unwrap();
-    //     return MlDaemonModel::new(model_dir_str,
-    //                               NeuralNetwork::from_file(model_dir_str, "nn"));
-    // }
+    pub fn from(dir: PathBuf) -> Self {
+        let model_dir_str = dir.to_str().unwrap();
+
+        let model_info = ModelInfo::from_file(&dir.join(MODEL_INFO_BIN));
+
+        return MlDaemonModel::new(model_info.name.as_str(),
+                                  NeuralNetwork::from_file(model_dir_str, "nn"),
+                                  model_info.layer_output_labels);
+    }
+}
+
+impl InstanceIdInitializer<MlDaemonModel> for MlDaemonModel {
+    fn get_id(&self) -> String {
+        return self.model_info.name.clone();
+    }
+
+    fn init(instance_id: &str) -> MlDaemonModel {
+        let models_dir = get_models_directory_path();
+        return MlDaemonModel::from(models_dir.join(instance_id));
+    }
 }

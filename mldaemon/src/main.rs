@@ -3,9 +3,12 @@ mod mldaemon_model;
 mod mldaemon_utils;
 mod test_data;
 
+mod instance_manager;
+
 use std::fs;
 use std::fs::{ReadDir};
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 use actix_cors::Cors;
 
 use actix_web::{web, post, get, App, HttpServer, Responder, HttpResponse, http};
@@ -15,6 +18,7 @@ use graymat::neural_network::NeuralNetwork;
 use crate::mldaemon_model::{MlDaemonModel, MODEL_INFO_BIN, ModelInfo};
 use crate::mldaemon_utils::{get_models_directory_path, make_dir_if_not_present};
 use serde::{Deserialize};
+use crate::instance_manager::InstanceManager;
 use crate::test_data::TestData;
 
 
@@ -165,6 +169,10 @@ async fn delete_model(model_name_path: web::Path<String>) -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+
+    let instance_manager: Arc<Mutex<InstanceManager<MlDaemonModel>>> = Arc::new(Mutex::new(InstanceManager::new()));
+
+    InstanceManager::start(instance_manager.clone());
 
     HttpServer::new(|| {
 

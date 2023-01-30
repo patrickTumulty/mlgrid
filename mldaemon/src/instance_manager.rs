@@ -1,0 +1,149 @@
+use std::collections::{HashMap, HashSet};
+use std::fmt::{Debug, Formatter};
+use std::sync::{Arc, Mutex};
+use std::{thread, time};
+use std::thread::JoinHandle;
+use chrono::{DateTime, Local};
+
+struct InstanceWrapper<T>
+    where T: Send
+{
+    instance: Arc<T>,
+    latest_access_time: DateTime<Local>
+}
+
+impl <T> InstanceWrapper<T>
+    where T: Send
+{
+    pub fn new(instance: T) -> InstanceWrapper<T> {
+        return Self {
+            instance: Arc::new(instance),
+            latest_access_time: Local::now()
+        }
+    }
+
+    pub fn get(&mut self) -> &mut Arc<T> {
+        self.latest_access_time = Local::now();
+        return &mut self.instance;
+    }
+
+    pub fn latest_access_time(&self) -> DateTime<Local> {
+        self.latest_access_time.clone()
+    }
+}
+
+struct RegisterError {
+    message: String
+}
+
+impl RegisterError {
+    pub fn new(message: String) -> RegisterError {
+        return Self { message }
+    }
+}
+
+impl Debug for RegisterError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Failed to register {}", self.message)
+    }
+}
+
+pub trait InstanceIdInitializer<T>
+    where T: Send
+{
+    fn get_id(&self) -> String;
+
+    fn init(instance_id: &str) -> T;
+}
+
+pub struct InstanceManager<T>
+    where T: InstanceIdInitializer<T> + Send + Sync
+{
+    instance_lookup: HashMap<String, InstanceWrapper<T>>,
+    registered_instance_ids: HashSet<String>,
+    background_thread_running: bool,
+    thread_handle: Option<JoinHandle<()>>
+}
+
+impl <T> InstanceManager<T>
+    where T: InstanceIdInitializer<T> + Send + Sync + 'static
+{
+    pub fn new() -> InstanceManager<T> {
+        return InstanceManager {
+            instance_lookup: HashMap::new(),
+            registered_instance_ids: HashSet::new(),
+            background_thread_running: true,
+            thread_handle: None
+        };
+    }
+
+    pub fn start(instance_manager: Arc<Mutex<InstanceManager<T>>>) {
+
+        let im_ptr = instance_manager.clone();
+        let im_ptr_clone = im_ptr.clone();
+        im_ptr.lock().unwrap().set_thread_handle(thread::spawn(move ||
+        {
+            loop
+            {
+                thread::sleep(time::Duration::from_secs(30));
+
+                let guard = im_ptr_clone.lock();
+                if guard.is_err() {
+                    println!("Failed to acquire lock");
+                    continue;
+                }
+
+                let mut instance = guard.unwrap();
+
+                if !instance.background_thread_running {
+                    return;
+                }
+
+                let now = Local::now();
+
+                let mut instance_clear_list: Vec<String> = Vec::new();
+
+                for instance_key in instance.instance_lookup.keys() {
+                    let instance = instance.instance_lookup.get(instance_key);
+                    if instance.is_some() {
+                        let delta = now - instance.unwrap().latest_access_time;
+                        if delta.num_minutes() > 5 {
+                            instance_clear_list.push(instance.unwrap().instance.get_id());
+                        }
+                    }
+                }
+
+                for instance_id in instance_clear_list {
+                    instance.instance_lookup.remove(instance_id.as_str());
+                }
+            }
+        }));
+    }
+
+    pub fn get(&mut self, instance_id: String) -> Option<Arc<T>> {
+        let instance_option = self.instance_lookup.get_mut(instance_id.as_str());
+
+        if instance_option.is_none() {
+            if self.registered_instance_ids.contains(instance_id.as_str()) {
+                let instance_wrapper = InstanceWrapper::new(T::init(instance_id.as_str().clone()));
+                let instance_ptr = instance_wrapper.instance.clone();
+                self.instance_lookup.insert(instance_id.clone(),
+                                            instance_wrapper);
+                return Some(instance_ptr);
+            }
+        }
+
+        return Some(instance_option.unwrap().get().clone());
+    }
+
+    pub fn register(&mut self, instance_id: String) -> Result<i32, RegisterError> {
+        if self.registered_instance_ids.insert(instance_id.clone()) {
+            return Err(RegisterError::new(instance_id.to_string()));
+        }
+        return Ok(0);
+    }
+
+    pub fn set_thread_handle(&mut self, thread_handle: JoinHandle<()>) {
+        self.thread_handle = Some(thread_handle);
+    }
+}
