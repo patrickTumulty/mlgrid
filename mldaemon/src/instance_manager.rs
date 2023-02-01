@@ -23,28 +23,15 @@ impl <T> InstanceWrapper<T>
     }
 
     pub fn get(&mut self) -> &mut Arc<T> {
-        self.latest_access_time = Local::now();
         return &mut self.instance;
     }
 
     pub fn latest_access_time(&self) -> DateTime<Local> {
         self.latest_access_time.clone()
     }
-}
 
-struct RegisterError {
-    message: String
-}
-
-impl RegisterError {
-    pub fn new(message: String) -> RegisterError {
-        return Self { message }
-    }
-}
-
-impl Debug for RegisterError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Failed to register {}", self.message)
+    pub fn set_latest_access_time(&mut self) {
+        self.latest_access_time = Local::now();
     }
 }
 
@@ -53,14 +40,13 @@ pub trait InstanceIdInitializer<T>
 {
     fn get_id(&self) -> String;
 
-    fn init(instance_id: &str) -> T;
+    fn init(instance_id: &str) -> Option<T>;
 }
 
 pub struct InstanceManager<T>
     where T: InstanceIdInitializer<T> + Send + Sync
 {
     instance_lookup: HashMap<String, InstanceWrapper<T>>,
-    registered_instance_ids: HashSet<String>,
     background_thread_running: bool,
     thread_handle: Option<JoinHandle<()>>
 }
@@ -71,7 +57,6 @@ impl <T> InstanceManager<T>
     pub fn new() -> InstanceManager<T> {
         return InstanceManager {
             instance_lookup: HashMap::new(),
-            registered_instance_ids: HashSet::new(),
             background_thread_running: true,
             thread_handle: None
         };
@@ -85,7 +70,7 @@ impl <T> InstanceManager<T>
         {
             loop
             {
-                thread::sleep(time::Duration::from_secs(30));
+                thread::sleep(time::Duration::from_secs(10));
 
                 let guard = im_ptr_clone.lock();
                 if guard.is_err() {
@@ -106,8 +91,8 @@ impl <T> InstanceManager<T>
                 for instance_key in instance.instance_lookup.keys() {
                     let instance = instance.instance_lookup.get(instance_key);
                     if instance.is_some() {
-                        let delta = now - instance.unwrap().latest_access_time;
-                        if delta.num_minutes() > 5 {
+                        let delta = now - instance.unwrap().latest_access_time();
+                        if delta.num_seconds() >= 30 {
                             instance_clear_list.push(instance.unwrap().instance.get_id());
                         }
                     }
@@ -120,27 +105,22 @@ impl <T> InstanceManager<T>
         }));
     }
 
-    pub fn get(&mut self, instance_id: String) -> Option<Arc<T>> {
-        let instance_option = self.instance_lookup.get_mut(instance_id.as_str());
+    pub fn get(&mut self, instance_id: &str) -> Option<Arc<T>> {
+        let instance_option = self.instance_lookup.get_mut(instance_id);
 
         if instance_option.is_none() {
-            if self.registered_instance_ids.contains(instance_id.as_str()) {
-                let instance_wrapper = InstanceWrapper::new(T::init(instance_id.as_str().clone()));
-                let instance_ptr = instance_wrapper.instance.clone();
-                self.instance_lookup.insert(instance_id.clone(),
-                                            instance_wrapper);
-                return Some(instance_ptr);
+            let instance_option = T::init(instance_id);
+            if instance_option.is_none() {
+                return None; // Failed to init
             }
+            let mut instance_wrapper = InstanceWrapper::new(instance_option.unwrap());
+            instance_wrapper.set_latest_access_time();
+            let instance_ptr = instance_wrapper.instance.clone();
+            self.instance_lookup.insert(instance_id.to_string(),
+                                        instance_wrapper);
+            return Some(instance_ptr);
         }
-
         return Some(instance_option.unwrap().get().clone());
-    }
-
-    pub fn register(&mut self, instance_id: String) -> Result<i32, RegisterError> {
-        if self.registered_instance_ids.insert(instance_id.clone()) {
-            return Err(RegisterError::new(instance_id.to_string()));
-        }
-        return Ok(0);
     }
 
     pub fn set_thread_handle(&mut self, thread_handle: JoinHandle<()>) {

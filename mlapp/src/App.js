@@ -20,7 +20,7 @@ export default class App extends Component {
                     <Routes>
                         <Route path='/' element={<ModelSelectorFC client={this.client}/>}/>
                         <Route path='/new-model-form' element={<NewModelPageFC client={this.client}/>}/>
-                        <Route path='/canvas' element={<GridPageFC/>}/>
+                        <Route path='/canvas' element={<GridPageFC client={this.client}/>}/>
                     </Routes>
                 </Router>
             </div>

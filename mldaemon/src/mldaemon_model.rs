@@ -68,6 +68,10 @@ impl MlDaemonModel {
                                   NeuralNetwork::from_file(model_dir_str, "nn"),
                                   model_info.layer_output_labels);
     }
+
+    pub fn neural_network(&self) -> &NeuralNetwork {
+        &self.neural_network
+    }
 }
 
 impl InstanceIdInitializer<MlDaemonModel> for MlDaemonModel {
@@ -75,8 +79,12 @@ impl InstanceIdInitializer<MlDaemonModel> for MlDaemonModel {
         return self.model_info.name.clone();
     }
 
-    fn init(instance_id: &str) -> MlDaemonModel {
+    fn init(instance_id: &str) -> Option<MlDaemonModel> {
         let models_dir = get_models_directory_path();
-        return MlDaemonModel::from(models_dir.join(instance_id));
+        let model_dir = models_dir.join(instance_id);
+        if model_dir.exists() {
+            return Some(MlDaemonModel::from(models_dir.join(instance_id)));
+        }
+        return None;
     }
 }

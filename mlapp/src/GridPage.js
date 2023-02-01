@@ -9,19 +9,31 @@ class GridPage extends Component {
     constructor(props) {
         super(props);
 
+        this.client = props.client;
+
         this.selectedModel = "";
 
         if (this.props.location.state !== null) {
             this.selectedModel = this.props.location.state.model_name;
         }
+
+        this.state = { output: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] }
     }
 
     render() {
         return (
             <div style={{display: "flex", justifyContent: "center"}}>
                 <Stack className="mx-auto" direction="horizontal" gap={2}>
-                    <GridCanvas onGridChangeCallback={(cells) => console.log("Hello " + cells.length)}/>
-                    <LabeledOutputComponent data={[0.112, 0.2223, 0.9, 0.78, 0.112, 0.2223, 0.9, 0.78, 0.112, 0.2223, 0.9, 0.78, 0.112, 0.2223, 0.9, 0.78]}/>
+                    <GridCanvas onGridChangeCallback={(cells) => {
+                        if (this.selectedModel !== "") {
+                            let result = this.client.evaluateNetwork(this.selectedModel, cells);
+                            console.log(result);
+                            this.setState({
+                               output: result
+                            });
+                        }
+                    }}/>
+                    <LabeledOutputComponent data={this.state.output}/>
                 </Stack>
             </div>
         );

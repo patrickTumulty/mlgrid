@@ -3,7 +3,6 @@ import './css/Grid.css'
 import NumberUtils from "./NumberUtils";
 import Button from "react-bootstrap/Button";
 import {Stack} from "react-bootstrap";
-import {useLocation, useNavigate} from "react-router-dom";
 
 const GRID_SIZE = 27;
 const CELL_SIZE = 15;
@@ -14,7 +13,7 @@ export default class GridCanvas extends Component {
     constructor(props) {
         super(props);
 
-        this.onGridChangedCallback = props.onGridChangedCallback;
+        this.onGridChangeCallback = props.onGridChangeCallback;
 
         this.r = document.querySelector(":root");
         this.r.style.setProperty("--cols", GRID_SIZE);
@@ -43,7 +42,7 @@ export default class GridCanvas extends Component {
         for (let i = 0; i < GRID_SIZE; i++) {
             let row = new Array(GRID_SIZE);
             for (let j = 0; j < GRID_SIZE; j++) {
-                row[j] = BLANK_CELL;
+                row[j] = 0.0;
             }
             cells[i] = row;
         }
@@ -119,7 +118,8 @@ export default class GridCanvas extends Component {
      * @returns {JSX.Element}
      */
     constructGridCell(row, col) {
-        let value = parseInt(this.state.cells[row][col]).toString(16).padStart(2, "0");
+        let rgbValue = NumberUtils.clamp(255 - (255 * this.state.cells[row][col]), 0, 255);
+        let value = parseInt(rgbValue).toString(16).padStart(2, "0");
         return <div style={{backgroundColor: "#" + value + value + value }} className={`grid-cell`}
                     onMouseDown={() => {
                         this.handleCellClicked(row, col);
@@ -143,8 +143,8 @@ export default class GridCanvas extends Component {
     }
 
     notifyOnGridChange() {
-        if (this.onGridChangedCallback !== undefined) {
-            this.onGridChangedCallback(this.state.cells);
+        if (this.onGridChangeCallback !== undefined) {
+            this.onGridChangeCallback(this.state.cells);
         }
     }
 
@@ -165,14 +165,14 @@ export default class GridCanvas extends Component {
             }
         }
 
-        this.applyRatioMatrixToGRid(this.strokeSize, row, col, mat);
+        this.applyRatioMatrixToGrid(this.strokeSize, row, col, mat);
 
         this.setState({
             cells: this.state.cells
         });
     }
 
-    applyRatioMatrixToGRid(squareRadius, row, col, mat) {
+    applyRatioMatrixToGrid(squareRadius, row, col, mat) {
         for (let i = 0; i < squareRadius; i++) {
             for (let j = 0; j < squareRadius; j++) {
                 let offset = Math.floor(squareRadius / 2);
@@ -204,8 +204,7 @@ export default class GridCanvas extends Component {
 
     setGridCell(row, col, value) {
         if ((row > -1 && row < GRID_SIZE) && (col > -1 && col < GRID_SIZE)) {
-            this.state.cells[row][col] = Math.min(this.state.cells[row][col],
-                                                  NumberUtils.clamp(255 - (255 * value), 0, 255));
+            this.state.cells[row][col] = Math.max(this.state.cells[row][col], NumberUtils.clamp(value, 0, 1));
         }
     }
 }

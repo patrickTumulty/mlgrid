@@ -5,21 +5,66 @@ mod test_data;
 
 mod instance_manager;
 
-use std::fs;
+use std::{fs};
 use std::fs::{ReadDir};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use actix_cors::Cors;
 
-use actix_web::{web, post, get, App, HttpServer, Responder, HttpResponse, http};
+use actix_web::{web, post, get, App, HttpServer, Responder, HttpResponse, http, HttpResponseBuilder};
+
+use actix_web::http::StatusCode;
 use chrono::Utc;
+use ndarray::{Array2};
 use graymat::activation_function::ActivationFunction;
 use graymat::neural_network::NeuralNetwork;
 use crate::mldaemon_model::{MlDaemonModel, MODEL_INFO_BIN, ModelInfo};
 use crate::mldaemon_utils::{get_models_directory_path, make_dir_if_not_present};
 use serde::{Deserialize};
+use graymat::column_vector::ColumnVector;
 use crate::instance_manager::InstanceManager;
 use crate::test_data::TestData;
+
+#[derive(Deserialize)]
+struct NetworkInputData {
+    data: Vec<Vec<f32>>
+}
+
+#[post("/evaluate-network/{model_name}")]
+async fn evaluate_network(model_name: web::Path<String>,
+                          network_input_data: web::Json<NetworkInputData>,
+                          instance_manager_ptr: web::Data<Arc<Mutex<InstanceManager<MlDaemonModel>>>>) -> impl Responder
+{
+    let lock = instance_manager_ptr.lock();
+    if lock.is_err() {
+        return HttpResponse::NoContent().finish();
+    }
+
+    let instance = lock.unwrap().get(model_name.as_str());
+    if instance.is_none() {
+        return HttpResponse::NoContent().finish();
+    }
+
+    let data: Vec<Vec<f32>> = network_input_data.into_inner().data;
+    let data_copy = vec_matrix_to_array2(data);
+
+    let cvec = ColumnVector::from(&data_copy);
+    let result = instance.unwrap().neural_network().evaluate(cvec);
+
+    return HttpResponseBuilder::new(StatusCode::OK).json(result.get_data().to_owned().into_raw_vec());
+}
+
+fn vec_matrix_to_array2(data: Vec<Vec<f32>>) -> Array2<f32> {
+    let rows = data.len();
+    let cols = data[0].len();
+    let mut data_copy: Array2<f32> = Array2::zeros((cols, rows));
+    for i in 0..rows {
+        for j in 0..cols {
+            data_copy[[i, j]] = data[i][j];
+        }
+    }
+    data_copy
+}
 
 
 #[get("/ping")]
@@ -170,26 +215,25 @@ async fn delete_model(model_name_path: web::Path<String>) -> impl Responder {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
-    let instance_manager: Arc<Mutex<InstanceManager<MlDaemonModel>>> = Arc::new(Mutex::new(InstanceManager::new()));
+    let instance_manager_ptr: Arc<Mutex<InstanceManager<MlDaemonModel>>> = Arc::new(Mutex::new(InstanceManager::new()));
 
-    InstanceManager::start(instance_manager.clone());
+    InstanceManager::start(instance_manager_ptr.clone());
 
-    HttpServer::new(|| {
-
-        // let api_service = web::scope("/api");
-
+    HttpServer::new(move || {
         let cors = Cors::default().allow_any_origin()
                                   .allowed_methods(vec!["GET", "POST"])
                                   .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
                                   .allowed_header(http::header::CONTENT_TYPE);
 
         App::new().wrap(cors)
+                  .app_data(web::Data::new(instance_manager_ptr.clone()))
                   .service(get_models)
                   .service(get_model_info)
                   .service(new_model)
                   .service(ping)
                   .service(add_test_data)
                   .service(delete_model)
+                  .service(evaluate_network)
     }).bind(("127.0.0.1", 8080))?
       .run()
       .await
