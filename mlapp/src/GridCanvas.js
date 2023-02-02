@@ -6,7 +6,8 @@ import {Stack} from "react-bootstrap";
 
 const GRID_SIZE = 27;
 const CELL_SIZE = 15;
-const BLANK_CELL = 255;
+const RGB_WHITE = 255;
+const RGB_BLACK = 0;
 
 export default class GridCanvas extends Component {
 
@@ -21,7 +22,7 @@ export default class GridCanvas extends Component {
         this.r.style.setProperty("--cell-size", CELL_SIZE + "px");
 
         this.strokeSize = 3;
-        this.blur = 1.15;
+        this.blur = 1.1;
         this.useRandom = true;
         this.rand = 0.1;
 
@@ -88,7 +89,7 @@ export default class GridCanvas extends Component {
     }
 
     eraseCell(row, col) {
-        this.state.cells[row][col] = BLANK_CELL;
+        this.state.cells[row][col] = 0.0;
         this.setState({
             cells: this.state.cells
         });
@@ -118,7 +119,7 @@ export default class GridCanvas extends Component {
      * @returns {JSX.Element}
      */
     constructGridCell(row, col) {
-        let rgbValue = NumberUtils.clamp(255 - (255 * this.state.cells[row][col]), 0, 255);
+        let rgbValue = NumberUtils.clamp(RGB_WHITE - (RGB_WHITE * this.state.cells[row][col]), RGB_BLACK, RGB_WHITE);
         let value = parseInt(rgbValue).toString(16).padStart(2, "0");
         return <div style={{backgroundColor: "#" + value + value + value }} className={`grid-cell`}
                     onMouseDown={() => {
