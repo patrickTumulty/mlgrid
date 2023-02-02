@@ -3,6 +3,11 @@
     padding: 4px;
 }
 
+.result-node-selected {
+    background-color: #0D6EFD;
+    border-radius: 10px;
+}
+
 .result-node:hover {
     opacity: 70%;
     background-color: #0D6EFD;

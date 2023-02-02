@@ -8,21 +8,13 @@ export default class MLDaemonRESTClient
     }
 
     evaluateNetwork(model, data) {
-        let result = this.client.post(`/evaluate-network/${model}`, {
-            data: data
-        });
-        if (result.status !== 200) {
-            return {};
-        }
-        return JSON.parse(result.responseText);
+        let json = { data: data };
+        let result = this.client.post(`/evaluate-network/${model}`, json);
+        return this.checkStatusAndReturnJSON(result);
     }
 
     getModels() {
-        let result = this.client.get("/get-models");
-        if (result.statusText !== "OK") {
-            return {};
-        }
-        return JSON.parse(result.responseText);
+        return this.checkStatusAndReturnJSON(this.client.get("/get-models"));
     }
 
     newModel(modelName, networkLayers, activationFunction, outputLabels) {
@@ -37,5 +29,16 @@ export default class MLDaemonRESTClient
 
     deleteModel(modelName) {
         return this.client.post("/delete-model/" + `${modelName}`, {});
+    }
+
+    checkStatusAndReturnJSON(result) {
+        if (result.status !== 200) {
+            return {};
+        }
+        return JSON.parse(result.responseText);
+    }
+
+    getModelInfo(modelName) {
+        return this.checkStatusAndReturnJSON(this.client.get(`/get-model-info/${modelName}`))
     }
 }

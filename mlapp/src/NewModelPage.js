@@ -152,7 +152,7 @@ class NewModelPage extends Component {
             if (result === undefined) {
                 this.setErrorMessage("Error. Something went wrong. IDK");
                 return;
-            } else if (result.statusText !== "OK") {
+            } else if (result.status !== 200) {
                 this.setErrorMessage(result.responseText);
                 return;
             }

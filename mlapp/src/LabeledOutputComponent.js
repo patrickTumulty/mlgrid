@@ -5,15 +5,36 @@ import "./css/LabeledOutputComponent.css"
 export default class LabeledOutputComponent extends Component {
     constructor(props) {
         super(props);
+
+        this.selectedNode = props.selectedNodeIndex;
+
+        this.nodeSelectedCallback = props.nodeSelectedCallback;
     }
 
     renderOutputNodes() {
         let output = [];
-        let index = 0;
-        this.props.data.forEach(value => {
+
+        for (let i = 0; i < this.props.data.length; i++) {
+            let value = this.props.data[i];
+
             let color = this.floatToColor(value);
+
+            let styleClassNames = "mx-auto result-node";
+            if (this.selectedNode === i) {
+                styleClassNames += " result-node-selected";
+            }
+
             output.push(
-                <Stack key={index} className="mx-auto result-node" direction="horizontal" gap={2}>
+                <Stack
+                    key={i}
+                    className={styleClassNames}
+                    direction="horizontal"
+                    gap={2}
+                    onClick={() => {
+                        this.selectedNode = i;
+                        this.nodeSelectedCallback(i);
+                    }}
+                >
                     <div
                         style={{
                             textAlign: "center",
@@ -29,11 +50,10 @@ export default class LabeledOutputComponent extends Component {
                     >
                         {value.toFixed(2)}
                     </div>
-                    <div style={{width: 50, textAlign: "left"}}>{index}</div>
+                    <div style={{width: 50, textAlign: "left"}}>{i}</div>
                 </Stack>
             );
-            index++;
-        })
+        }
         return output;
     }
 

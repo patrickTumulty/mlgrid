@@ -15,6 +15,7 @@
     grid-gap: 0;
     align-self: flex-start;
     outline: #0D6EFD solid 5px;
+    border-radius: 5px;
 }
 
 .grid-container {
