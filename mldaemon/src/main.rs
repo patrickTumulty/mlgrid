@@ -81,10 +81,21 @@ async fn get_models() -> impl Responder {
 
     make_dir_if_not_present(&models_dir);
 
-    let models: ReadDir = models_dir.read_dir().unwrap();
+    let models: ReadDir = models_dir.read_dir()
+                                    .unwrap();
     let mut models_vec: Vec<String> = Vec::new();
     for model in models {
-        models_vec.push(model.unwrap().file_name().to_str().unwrap().to_owned());
+        if model.is_ok() {
+            let dir_name = model.unwrap()
+                                .file_name()
+                                .to_str()
+                                .unwrap()
+                                .to_owned();
+            if dir_name.starts_with(".") {
+                continue;
+            }
+            models_vec.push(dir_name);
+        }
     }
 
     return web::Json(models_vec);
