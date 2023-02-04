@@ -102,20 +102,20 @@ async fn get_models() -> impl Responder {
 }
 
 #[get("/get-model-info/{model_name}")]
-async fn get_model_info(model_name: web::Path<String>) -> impl Responder {
-    let models_dir = get_models_directory_path();
-    if !&models_dir.exists() {
-        return HttpResponse::BadRequest().body("No models found");
-    }
-    let model_name_string = model_name.into_inner();
-    let model_dir = models_dir.join(model_name_string.to_owned());
-    if !&model_dir.exists() {
-        return HttpResponse::BadRequest().body(format!("Model {} not found", model_name_string));
+async fn get_model_info(model_name: web::Path<String>,
+                        instance_manager_ptr: web::Data<Arc<Mutex<InstanceManager<MlDaemonModel>>>>)
+                        -> impl Responder
+{
+    let instance_manager = instance_manager_ptr.into_inner().clone();
+    let instance = instance_manager.lock()
+                                   .unwrap()
+                                   .get(model_name.as_str());
+
+    if instance.is_none() {
+        return HttpResponse::NoContent().finish();
     }
 
-    let model_info: ModelInfo = ModelInfo::from_file(&model_dir.join(MODEL_INFO_BIN));
-
-    return HttpResponse::Ok().json(web::Json(model_info));
+    return HttpResponse::Ok().json(web::Json(instance.unwrap().lock().unwrap().model_info().clone()));
 }
 
 #[derive(Deserialize)]

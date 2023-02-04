@@ -51,7 +51,7 @@ impl MlDaemonModel {
         }
     }
 
-    pub fn save(self, save_dir: PathBuf) {
+    pub fn save(&self, save_dir: PathBuf) {
         let model_dir = save_dir.join(&self.model_info.name);
         make_dir_if_not_present(&model_dir);
 
@@ -77,6 +77,10 @@ impl MlDaemonModel {
     pub fn increment_total_test_examples(&mut self) {
         self.model_info.total_test_examples += 1;
     }
+
+    pub fn model_info(&self) -> &ModelInfo {
+        &self.model_info
+    }
 }
 
 impl InstanceIdInitializer<MlDaemonModel> for MlDaemonModel {
@@ -84,12 +88,17 @@ impl InstanceIdInitializer<MlDaemonModel> for MlDaemonModel {
         return self.model_info.name.clone();
     }
 
-    fn init(instance_id: &str) -> Option<MlDaemonModel> {
+    fn construct(instance_id: &str) -> Option<MlDaemonModel> {
         let models_dir = get_models_directory_path();
         let model_dir = models_dir.join(instance_id);
         if model_dir.exists() {
             return Some(MlDaemonModel::from(models_dir.join(instance_id)));
         }
         return None;
+    }
+
+    fn destruct(&self) {
+        let models_dir_path = get_models_directory_path();
+        self.save(models_dir_path);
     }
 }

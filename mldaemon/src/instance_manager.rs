@@ -40,7 +40,9 @@ pub trait InstanceIdInitializer<T>
 {
     fn get_id(&self) -> String;
 
-    fn init(instance_id: &str) -> Option<T>;
+    fn construct(instance_id: &str) -> Option<T>;
+
+    fn destruct(&self);
 }
 
 pub struct InstanceManager<T>
@@ -99,6 +101,12 @@ impl <T> InstanceManager<T>
                 }
 
                 for instance_id in instance_clear_list {
+                    instance.instance_lookup.get(instance_id.as_str())
+                                            .unwrap()
+                                            .instance
+                                            .lock()
+                                            .unwrap()
+                                            .destruct();
                     instance.instance_lookup.remove(instance_id.as_str());
                 }
             }
@@ -109,7 +117,7 @@ impl <T> InstanceManager<T>
         let instance_option = self.instance_lookup.get_mut(instance_id);
 
         if instance_option.is_none() {
-            let instance_option = T::init(instance_id);
+            let instance_option = T::construct(instance_id);
             if instance_option.is_none() {
                 return None; // Failed to init
             }
