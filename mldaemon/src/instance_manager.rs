@@ -8,7 +8,7 @@ use chrono::{DateTime, Local};
 struct InstanceWrapper<T>
     where T: Send
 {
-    instance: Arc<T>,
+    instance: Arc<Mutex<T>>,
     latest_access_time: DateTime<Local>
 }
 
@@ -17,12 +17,12 @@ impl <T> InstanceWrapper<T>
 {
     pub fn new(instance: T) -> InstanceWrapper<T> {
         return Self {
-            instance: Arc::new(instance),
+            instance: Arc::new(Mutex::new(instance)),
             latest_access_time: Local::now()
         }
     }
 
-    pub fn get(&mut self) -> &mut Arc<T> {
+    pub fn get(&mut self) -> &mut Arc<Mutex<T>> {
         return &mut self.instance;
     }
 
@@ -93,7 +93,7 @@ impl <T> InstanceManager<T>
                     if instance.is_some() {
                         let delta = now - instance.unwrap().latest_access_time();
                         if delta.num_seconds() >= 30 {
-                            instance_clear_list.push(instance.unwrap().instance.get_id());
+                            instance_clear_list.push(instance.unwrap().instance.lock().unwrap().get_id());
                         }
                     }
                 }
@@ -105,7 +105,7 @@ impl <T> InstanceManager<T>
         }));
     }
 
-    pub fn get(&mut self, instance_id: &str) -> Option<Arc<T>> {
+    pub fn get(&mut self, instance_id: &str) -> Option<Arc<Mutex<T>>> {
         let instance_option = self.instance_lookup.get_mut(instance_id);
 
         if instance_option.is_none() {

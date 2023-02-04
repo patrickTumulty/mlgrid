@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::{Read, Write};
+use std::ops::{Deref, DerefMut};
 use std::path::{PathBuf};
 use serde::{Deserialize, Serialize};
 use graymat::column_vector::ColumnVector;
@@ -71,6 +72,10 @@ impl MlDaemonModel {
 
     pub fn neural_network(&self) -> &NeuralNetwork {
         &self.neural_network
+    }
+
+    pub fn increment_total_test_examples(&mut self) {
+        self.model_info.total_test_examples += 1;
     }
 }
 

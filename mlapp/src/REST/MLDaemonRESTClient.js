@@ -41,4 +41,17 @@ export default class MLDaemonRESTClient
     getModelInfo(modelName) {
         return this.checkStatusAndReturnJSON(this.client.get(`/get-model-info/${modelName}`))
     }
+
+    addTestData(modelName, input, expectedResult) {
+        let inputData = this.linearizeMatrix(input);
+        this.client.post(`/add-test-data/${modelName}`, { data: inputData, target: expectedResult })
+    }
+
+    linearizeMatrix(mat) {
+        let arr = [];
+        mat.forEach(row => {
+            arr = arr.concat(row);
+        });
+        return arr;
+    }
 }

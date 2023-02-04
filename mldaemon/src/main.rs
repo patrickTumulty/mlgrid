@@ -14,12 +14,12 @@ use actix_cors::Cors;
 use actix_web::{web, post, get, App, HttpServer, Responder, HttpResponse, http, HttpResponseBuilder};
 
 use actix_web::http::StatusCode;
-use chrono::Utc;
+use chrono::{Local, Utc};
 use ndarray::{Array2};
 use graymat::activation_function::ActivationFunction;
 use graymat::neural_network::NeuralNetwork;
 use crate::mldaemon_model::{MlDaemonModel, MODEL_INFO_BIN, ModelInfo};
-use crate::mldaemon_utils::{get_models_directory_path, make_dir_if_not_present};
+use crate::mldaemon_utils::{get_models_directory_path, hash_string, make_dir_if_not_present};
 use serde::{Deserialize};
 use graymat::column_vector::ColumnVector;
 use crate::instance_manager::InstanceManager;
@@ -49,7 +49,7 @@ async fn evaluate_network(model_name: web::Path<String>,
     let data_copy = vec_matrix_to_array2(data);
 
     let cvec = ColumnVector::from(&data_copy);
-    let result = instance.unwrap().neural_network().evaluate(cvec);
+    let result = instance.unwrap().lock().unwrap().neural_network().evaluate(cvec);
 
     return HttpResponseBuilder::new(StatusCode::OK).json(result.get_data().to_owned().into_raw_vec());
 }
@@ -169,8 +169,18 @@ fn parse_new_model_info_to_neural_network(info: &NewModelInfo) -> NeuralNetwork 
 
 #[post("/add-test-data/{model_name}")]
 async fn add_test_data(model_name: web::Path<String>,
-                       test_data_json: web::Json<TestData>) -> impl Responder
+                       test_data_json: web::Json<TestData>,
+                       instance_manager_ptr: web::Data<Arc<Mutex<InstanceManager<MlDaemonModel>>>>) -> impl Responder
 {
+    let instance_manager = instance_manager_ptr.into_inner().clone();
+    let instance = instance_manager.lock()
+                                                       .unwrap()
+                                                       .get(model_name.as_str());
+    if instance.is_none() {
+        return HttpResponse::NoContent().finish();
+    }
+    instance.unwrap().lock().unwrap().increment_total_test_examples();
+
     let model_name_path = model_name.into_inner();
     let target_model_dir = get_target_model_dir(&model_name_path);
     if target_model_dir.is_none() {
@@ -183,11 +193,9 @@ async fn add_test_data(model_name: web::Path<String>,
 
     make_dir_if_not_present(&test_data_dir);
 
-    let test_data_file_path = test_data_dir.join(test_data.label.to_owned());
-    if test_data_file_path.exists() {
-        return HttpResponse::BadRequest().body(format!("Test data with label {} already present",
-                                                       test_data.label.to_owned()));
-    }
+    let hash_title = hash_string(Local::now().to_string().as_str());
+
+    let test_data_file_path = test_data_dir.join(hash_title);
 
     test_data.to_file(test_data_file_path.to_str()
                                          .unwrap()

@@ -1,4 +1,4 @@
-import {Container, Stack} from "react-bootstrap";
+import {Stack} from "react-bootstrap";
 import {Component} from "react";
 import "./css/LabeledOutputComponent.css"
 
@@ -31,7 +31,7 @@ export default class LabeledOutputComponent extends Component {
                     direction="horizontal"
                     gap={2}
                     onClick={() => {
-                        this.selectedNode = i;
+                        this.selectedNode = this.selectedNode === i ? -1 : i;
                         this.nodeSelectedCallback(i);
                     }}
                 >

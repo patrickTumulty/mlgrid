@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
 pub struct TestData {
-    pub label: String,
     pub data: Vec<f32>,
     pub target: Vec<f32>
 }
@@ -24,5 +23,4 @@ impl TestData {
         let data: TestData = bincode::deserialize(&bytes).unwrap();
         return data;
     }
-
 }

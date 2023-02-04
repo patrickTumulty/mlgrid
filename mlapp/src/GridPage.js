@@ -3,7 +3,7 @@ import {Form, Stack} from "react-bootstrap";
 import GridCanvas from "./GridCanvas";
 import LabeledOutputComponent from "./LabeledOutputComponent";
 import {useLocation, useNavigate} from "react-router-dom";
-
+import Button from "react-bootstrap/Button";
 
 class GridPage extends Component {
     constructor(props) {
@@ -26,10 +26,10 @@ class GridPage extends Component {
 
         if (this.selectedModel !== "") {
             let info = this.client.getModelInfo(this.selectedModel);
-            if (!info.isEmpty()) {
+            if (info !== {}) {
                 this.modelInfo.name = info.name;
                 this.modelInfo.testExamples = info.total_test_examples;
-                this.outputNodes = this.modelInfo.layer_output_labels.length;
+                this.outputNodes = info.layer_output_labels.length;
             }
         }
 
@@ -37,6 +37,12 @@ class GridPage extends Component {
             output: new Array(this.outputNodes).fill(0.0),
             selectedOutputNodeIndex: -1
         }
+    }
+
+    handleSaveModel() {
+        let arr = new Array(this.state.output.length).fill(0.0);
+        arr[this.state.selectedOutputNodeIndex] = 1.0;
+        this.client.addTestData(this.selectedModel, this.cells, arr);
     }
 
     render() {
@@ -52,7 +58,7 @@ class GridPage extends Component {
                             selectedNodeIndex={this.state.selectedOutputNodeIndex}
                             nodeSelectedCallback={(index) => {
                                 this.setState((prevState) => ({
-                                    selectedOutputNodeIndex: index
+                                    selectedOutputNodeIndex: this.state.selectedOutputNodeIndex === index ? -1 : index
                                 }));
                             }}
                         />
@@ -67,6 +73,12 @@ class GridPage extends Component {
                             padding: 20,
                         }}>
                         <Form.Label>Test Training Examples: {this.modelInfo.testExamples}</Form.Label>
+                        <Button
+                            disabled={this.state.selectedOutputNodeIndex === -1}
+                            onClick={() => this.handleSaveModel()}
+                        >
+                            Save Test Example
+                        </Button>
                     </Stack>
                 </Stack>
             </div>
@@ -74,6 +86,7 @@ class GridPage extends Component {
     }
 
     handleGridChanged(cells) {
+        this.cells = cells;
         if (this.selectedModel !== "") {
             let result = this.client.evaluateNetwork(this.selectedModel, cells);
             this.setState({
