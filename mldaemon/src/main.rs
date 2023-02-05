@@ -25,6 +25,59 @@ use graymat::column_vector::ColumnVector;
 use crate::instance_manager::InstanceManager;
 use crate::test_data::TestData;
 
+
+#[derive(Deserialize)]
+struct NetworkTrainingParameters {
+    iterations: u32,
+    batch_size: usize,
+    learning_rate: f32
+}
+
+#[post("/train-network/{model_name}")]
+async fn train_network(model_name: web::Path<String>,
+                       network_training_params: web::Json<NetworkTrainingParameters>,
+                       instance_manager_ptr: web::Data<Arc<Mutex<InstanceManager<MlDaemonModel>>>>) -> impl Responder
+{
+    let instance_manager = instance_manager_ptr.into_inner().clone();
+    let instance = instance_manager.lock()
+                                   .unwrap()
+                                   .get(model_name.as_str());
+
+    let iterations = network_training_params.iterations;
+    let batch_size = network_training_params.batch_size;
+    let learning_rate = network_training_params.learning_rate;
+
+    let mut training_data: Vec<(ColumnVector, ColumnVector)> = Vec::new();
+
+    let models_dir = get_models_directory_path();
+    let selected_model_dir = models_dir.join(model_name.as_str());
+    let test_data_dir = selected_model_dir.join(TEST_DATA_DIR_NAME);
+    let test_data_files = test_data_dir.read_dir().unwrap();
+    for test_data_file in test_data_files {
+        if test_data_file.is_err() {
+            continue;
+        }
+        let path = test_data_file.unwrap().path().to_str().unwrap().to_string();
+        let test_data = TestData::from_file(path);
+        let input_data = ColumnVector::from_vec(test_data.data);
+        let target_result = ColumnVector::from_vec(test_data.target);
+        training_data.push((input_data, target_result));
+    }
+
+    println!("Training starting");
+
+    instance.unwrap().lock().unwrap().neural_network_mut()
+                                     .train(training_data,
+                                            iterations,
+                                            batch_size,
+                                            learning_rate);
+
+    println!("Training done");
+
+    return HttpResponse::Ok().finish();
+}
+
+
 #[derive(Deserialize)]
 struct NetworkInputData {
     data: Vec<Vec<f32>>
@@ -50,6 +103,8 @@ async fn evaluate_network(model_name: web::Path<String>,
 
     let cvec = ColumnVector::from(&data_copy);
     let result = instance.unwrap().lock().unwrap().neural_network().evaluate(cvec);
+
+    // println!("{}", result);
 
     return HttpResponseBuilder::new(StatusCode::OK).json(result.get_data().to_owned().into_raw_vec());
 }
@@ -167,6 +222,8 @@ fn parse_new_model_info_to_neural_network(info: &NewModelInfo) -> NeuralNetwork 
                               af);
 }
 
+const TEST_DATA_DIR_NAME: &'static str = "test_data";
+
 #[post("/add-test-data/{model_name}")]
 async fn add_test_data(model_name: web::Path<String>,
                        test_data_json: web::Json<TestData>,
@@ -189,7 +246,7 @@ async fn add_test_data(model_name: web::Path<String>,
     }
 
     let test_data = test_data_json.into_inner();
-    let test_data_dir = target_model_dir.unwrap().join("test_data");
+    let test_data_dir = target_model_dir.unwrap().join(TEST_DATA_DIR_NAME);
 
     make_dir_if_not_present(&test_data_dir);
 
@@ -233,7 +290,6 @@ async fn delete_model(model_name_path: web::Path<String>) -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-
     let instance_manager_ptr: Arc<Mutex<InstanceManager<MlDaemonModel>>> = Arc::new(Mutex::new(InstanceManager::new()));
 
     InstanceManager::start(instance_manager_ptr.clone());
@@ -253,6 +309,7 @@ async fn main() -> std::io::Result<()> {
                   .service(add_test_data)
                   .service(delete_model)
                   .service(evaluate_network)
+                  .service(train_network)
     }).bind(("127.0.0.1", 8080))?
       .run()
       .await

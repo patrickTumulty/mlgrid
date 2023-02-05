@@ -8,7 +8,7 @@ export default class RESTClient
         this.remote = remote;
     }
 
-    post(url, json) {
+    post(url, json, timeout=1000) {
         return $.ajax({
             type: "POST",
             url: `${this.remote}${url}`,

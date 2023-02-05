@@ -76,6 +76,10 @@ impl MlDaemonModel {
         &self.neural_network
     }
 
+    pub fn neural_network_mut(&mut self) -> &mut NeuralNetwork {
+        &mut self.neural_network
+    }
+
     pub fn increment_total_test_examples(&mut self) {
         self.model_info.total_test_examples += 1;
     }
@@ -101,6 +105,7 @@ impl InstanceIdInitializer<MlDaemonModel> for MlDaemonModel {
     }
 
     fn destruct(&self) {
+        println!("Saving");
         let models_dir_path = get_models_directory_path();
         self.save(models_dir_path);
     }

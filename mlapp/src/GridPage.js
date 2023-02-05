@@ -11,6 +11,10 @@ class GridPage extends Component {
 
         this.client = props.client;
 
+        this.iterationsRef = React.createRef();
+        this.batchSizeRef = React.createRef();
+        this.learningRateRef = React.createRef();
+
         this.selectedModel = "";
 
         if (this.props.location.state !== null) {
@@ -61,8 +65,12 @@ class GridPage extends Component {
     render() {
         return (
             <div style={{display: "flex", justifyContent: "center"}}>
-                <Stack gap={5}>
+                <Stack gap={3}>
                     <Stack className="mx-auto" direction="horizontal" gap={2}>
+                        <Stack gap={2} style={{padding: 20}}>
+                            {this.trainingControls()}
+                            {this.testDataControls()}
+                        </Stack>
                         <GridCanvas
                             onGridChangeCallback={(cells) => this.handleGridChanged(cells)}
                         />
@@ -76,32 +84,63 @@ class GridPage extends Component {
                             }}
                         />
                     </Stack>
-                    <Stack
-                        className="mx-auto"
-                        style={{
-                            borderStyle: "solid",
-                            borderWidth: "5px",
-                            borderColor: "#0D6EFD",
-                            borderRadius: "10px",
-                            padding: 20,
-                        }}>
-                        <Form.Label>Test Training Examples: {this.modelInfo.testExamples}</Form.Label>
-                        <Button
-                            disabled={this.state.selectedOutputNodeIndex === -1}
-                            onClick={() => this.handleSaveModel()}
-                        >
-                            Save Test Example
-                        </Button>
-                    </Stack>
                 </Stack>
             </div>
         );
+    }
+
+    testDataControls() {
+        return <Stack
+            className="mx-auto"
+            style={{
+                borderStyle: "solid",
+                borderWidth: "5px",
+                borderColor: "#0D6EFD",
+                borderRadius: "10px",
+                padding: 20,
+                width: 400
+            }}>
+            <Form.Label>Test Training Examples: {this.modelInfo.testExamples}</Form.Label>
+            <Button
+                disabled={this.state.selectedOutputNodeIndex === -1}
+                onClick={() => this.handleSaveModel()}
+            >
+                Save Test Example
+            </Button>
+        </Stack>;
+    }
+
+    trainingControls() {
+        return <Stack gap={3} style={{
+            borderStyle: "solid",
+            borderWidth: "5px",
+            borderColor: "#0D6EFD",
+            borderRadius: "10px",
+            padding: 10,
+            width: 400,
+            alignSelf: "center"
+        }}>
+            <Form.Control ref={this.iterationsRef} type="text" placeholder="Iterations"/>
+            <Form.Control ref={this.batchSizeRef} type="text" placeholder="Batch Size"/>
+            <Form.Control ref={this.learningRateRef} type="text" placeholder="Learn Rate"/>
+            <Button onClick={() => {
+                let params = {
+                    iterations: parseInt(this.iterationsRef.current.value),
+                    batch_size: parseInt(this.batchSizeRef.current.value),
+                    learning_rate: parseFloat(this.learningRateRef.current.value)
+                };
+                console.log("Send Train");
+                this.client.trainNetwork(this.selectedModel, params);
+                console.log("Done");
+            }}>Train</Button>
+        </Stack>;
     }
 
     handleGridChanged(cells) {
         this.cells = cells;
         if (this.selectedModel !== "") {
             let result = this.client.evaluateNetwork(this.selectedModel, cells);
+            console.log(result);
             this.setState({
                 output: result
             });

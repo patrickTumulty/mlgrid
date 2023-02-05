@@ -47,6 +47,10 @@ export default class MLDaemonRESTClient
         this.client.post(`/add-test-data/${modelName}`, { data: inputData, target: expectedResult })
     }
 
+    trainNetwork(modelName, paramsJson) {
+        return this.client.post(`/train-network/${modelName}`, paramsJson, 60 * (60 * 1000));
+    }
+
     linearizeMatrix(mat) {
         let arr = [];
         mat.forEach(row => {
