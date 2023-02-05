@@ -6,6 +6,8 @@ export default class LabeledOutputComponent extends Component {
     constructor(props) {
         super(props);
 
+        this.props = props;
+
         this.selectedNode = props.selectedNodeIndex;
 
         this.nodeSelectedCallback = props.nodeSelectedCallback;
@@ -20,7 +22,7 @@ export default class LabeledOutputComponent extends Component {
             let color = this.floatToColor(value);
 
             let styleClassNames = "mx-auto result-node";
-            if (this.selectedNode === i) {
+            if (this.props.selectedNodeIndex === i) {
                 styleClassNames += " result-node-selected";
             }
 

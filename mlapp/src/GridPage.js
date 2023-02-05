@@ -34,6 +34,7 @@ class GridPage extends Component {
         }
 
         this.state = {
+            testExamples: this.modelInfo.testExamples,
             output: new Array(this.outputNodes).fill(0.0),
             selectedOutputNodeIndex: -1
         }
@@ -43,6 +44,18 @@ class GridPage extends Component {
         let arr = new Array(this.state.output.length).fill(0.0);
         arr[this.state.selectedOutputNodeIndex] = 1.0;
         this.client.addTestData(this.selectedModel, this.cells, arr);
+
+        let info = this.client.getModelInfo(this.selectedModel);
+        if (info !== {}) {
+            this.modelInfo.name = info.name;
+            this.modelInfo.testExamples = info.total_test_examples;
+            this.outputNodes = info.layer_output_labels.length;
+        }
+
+        this.setState((prevState) => ({
+            testExamples: this.modelInfo.testExamples,
+            selectedOutputNodeIndex: -1
+        }));
     }
 
     render() {

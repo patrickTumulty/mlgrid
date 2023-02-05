@@ -1,3 +1,4 @@
+use std::fs;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::ops::{Deref, DerefMut};
@@ -39,11 +40,11 @@ impl ModelInfo {
 pub const MODEL_INFO_BIN: &'static str = "model_info.bin";
 
 impl MlDaemonModel {
-    pub fn new(name: &str, neural_network: NeuralNetwork, layer_output_labels: Vec<String>) -> Self {
+    pub fn new(name: &str, neural_network: NeuralNetwork, layer_output_labels: Vec<String>, total_test_examples: u32) -> Self {
         MlDaemonModel {
             model_info: ModelInfo {
                 name: name.to_string(),
-                total_test_examples: 0,
+                total_test_examples,
                 layer_output_labels
             },
             neural_network,
@@ -67,7 +68,8 @@ impl MlDaemonModel {
 
         return MlDaemonModel::new(model_info.name.as_str(),
                                   NeuralNetwork::from_file(model_dir_str, "nn"),
-                                  model_info.layer_output_labels);
+                                  model_info.layer_output_labels,
+                                  model_info.total_test_examples);
     }
 
     pub fn neural_network(&self) -> &NeuralNetwork {
@@ -92,7 +94,8 @@ impl InstanceIdInitializer<MlDaemonModel> for MlDaemonModel {
         let models_dir = get_models_directory_path();
         let model_dir = models_dir.join(instance_id);
         if model_dir.exists() {
-            return Some(MlDaemonModel::from(models_dir.join(instance_id)));
+            let model = MlDaemonModel::from(models_dir.join(instance_id));
+            return Some(model);
         }
         return None;
     }

@@ -53,6 +53,8 @@ pub struct InstanceManager<T>
     thread_handle: Option<JoinHandle<()>>
 }
 
+const INSTANCE_CLEANUP_INTERVAL: i64 = 10;
+
 impl <T> InstanceManager<T>
     where T: InstanceIdInitializer<T> + Send + Sync + 'static
 {
@@ -72,7 +74,7 @@ impl <T> InstanceManager<T>
         {
             loop
             {
-                thread::sleep(time::Duration::from_secs(10));
+                thread::sleep(time::Duration::from_secs(INSTANCE_CLEANUP_INTERVAL as u64));
 
                 let guard = im_ptr_clone.lock();
                 if guard.is_err() {
@@ -94,7 +96,7 @@ impl <T> InstanceManager<T>
                     let instance = instance.instance_lookup.get(instance_key);
                     if instance.is_some() {
                         let delta = now - instance.unwrap().latest_access_time();
-                        if delta.num_seconds() >= 30 {
+                        if delta.num_seconds() >= INSTANCE_CLEANUP_INTERVAL {
                             instance_clear_list.push(instance.unwrap().instance.lock().unwrap().get_id());
                         }
                     }

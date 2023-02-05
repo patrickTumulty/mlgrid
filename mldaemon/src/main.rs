@@ -138,7 +138,7 @@ async fn new_model(info: web::Json<NewModelInfo>) -> impl Responder {
 
     let model = MlDaemonModel::new(&new_model_info.model_name,
                                    nn,
-                                   new_model_info.layer_output_labels);
+                                   new_model_info.layer_output_labels, 0);
 
     model.save(models_dir);
 
