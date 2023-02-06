@@ -1,3 +1,4 @@
+extern crate core;
 
 mod mldaemon_model;
 mod mldaemon_utils;
@@ -19,7 +20,7 @@ use ndarray::{Array2};
 use graymat::activation_function::ActivationFunction;
 use graymat::neural_network::NeuralNetwork;
 use crate::mldaemon_model::{MlDaemonModel, MODEL_INFO_BIN, ModelInfo};
-use crate::mldaemon_utils::{get_models_directory_path, hash_string, make_dir_if_not_present};
+use crate::mldaemon_utils::{ascii_gradient, cvec_max, get_models_directory_path, hash_string, make_dir_if_not_present, vec_max};
 use serde::{Deserialize};
 use graymat::column_vector::ColumnVector;
 use crate::instance_manager::InstanceManager;
@@ -313,6 +314,90 @@ async fn main() -> std::io::Result<()> {
     }).bind(("127.0.0.1", 8080))?
       .run()
       .await
+}
+
+#[allow(dead_code)]
+fn testing_code() {
+
+    let model_name = "NumbersModel".to_string();
+
+    let training_data = get_test_data(model_name.to_owned(), false);
+    let training_data2 = get_test_data(model_name, false);
+
+    let mut nn = NeuralNetwork::new(27 * 27, 10, vec![16, 16], ActivationFunction::SIGMOID);
+    // let mut nn = NeuralNetwork::from_file(".", "network");
+
+    let w = nn.layers()[0].weights().clone();
+
+    println!("Training");
+    nn.train(training_data, 500, 15, 0.9);
+    println!("Done");
+
+    // println!("{}", w == nn.layers()[0].weights());
+
+    nn.to_file(".", "network");
+
+    for test in training_data2 {
+        // let t = test.0.get_data().clone().into_shape((27, 27)).unwrap();
+        // for i in 0..27 {
+        //     for j in 0..27 {
+        //         print!("{} ", ascii_gradient(t[[i, j]]));
+        //     }
+        //     print!("\n");
+        // }
+        let r = nn.evaluate(test.0);
+        let result = cvec_max(&r);
+        let expected = cvec_max(&test.1);
+        print!("Expected: {}, Result: {}: {}", expected.0, result.0, result.1);
+        if result.0 == expected.0 {
+            print!(" -- Pass");
+        }
+        print!("\n");
+    }
+
+    // println!("{}", training_data[0].0);
+}
+
+fn get_test_data(model_name: String, restrict: bool) -> Vec<(ColumnVector, ColumnVector)> {
+    let mut training_data: Vec<(ColumnVector, ColumnVector)> = Vec::new();
+
+    let models_dir = get_models_directory_path();
+    let selected_model_dir = models_dir.join(model_name.as_str());
+    let test_data_dir = selected_model_dir.join(TEST_DATA_DIR_NAME);
+    let test_data_files = test_data_dir.read_dir().unwrap();
+    let mut count = 0;
+    for test_data_file in test_data_files {
+        // if count == 50 && restrict {
+        //     return training_data;
+        // }
+        // count += 1;
+        if test_data_file.is_err() {
+            continue;
+        }
+        let tpf = test_data_file.unwrap();
+        let path = tpf.path().to_str().unwrap().to_string();
+        let test_data = TestData::from_file(path);
+
+        let input_data = ColumnVector::from_vec(test_data.data);
+        let a: Array2<f32> = input_data.get_data().to_shape((27, 27)).unwrap().to_owned();
+        // for i in 0..27 {
+        //     for j in 0..27 {
+        //         print!("{} ", ascii_gradient(a[[i, j]]));
+        //     }
+        //     print!("\n");
+        // }
+        let target_result = ColumnVector::from_vec(test_data.target);
+        // println!("{}", target_result);
+        if restrict {
+            if cvec_max(&target_result).0 == 0 || cvec_max(&target_result).0 == 2 {
+                training_data.push((input_data, target_result));
+            }
+        } else {
+            training_data.push((input_data, target_result));
+        }
+
+    }
+    training_data
 }
 
 

@@ -24,3 +24,12 @@ impl TestData {
         return data;
     }
 }
+
+impl Clone for TestData {
+    fn clone(&self) -> Self {
+        return TestData {
+            data: self.data.clone(),
+            target: self.target.clone()
+        }
+    }
+}
